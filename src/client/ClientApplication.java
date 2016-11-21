@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by Jordan on 11/14/2016.
  */
-public class Client {
+public class ClientApplication {
 
     public static void main(String[] args) {
         try {
