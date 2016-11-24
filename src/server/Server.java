@@ -26,8 +26,8 @@ public class Server {
         while (this.running) {
             final DatagramPacket recievePacket = new DatagramPacket(recieveData, recieveData.length);
             this.socket.receive(recievePacket);
-            final Message message = Messages.decode(recieveData);
-            System.out.println("Server [RECEIVED]: " + message.toString());
+            //final Message message = Messages.decode(recieveData);
+            //System.out.println("Server [RECEIVED]: " + message.toString());
         }
     }
 
