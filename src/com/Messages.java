@@ -1,5 +1,7 @@
 package com;
 
+import java.util.Arrays;
+
 /**
  * Created by Jordan on 11/20/2016.
  */
@@ -28,10 +30,11 @@ public class Messages {
                 new String(source), new String(destination), new String(payload));
     }
 
-
+    /*
+        Sorts the Packet array so that the sequence numbers are in ascending order then reconstructs the message
+     */
     public static Message decodeToMessage(final Packet[] packets) {
-        // needs to sort
-
+        Arrays.sort(packets);
         final Message message = new Message(packets[0].getType(),
                 packets[0].getSourceId(), packets[0].getDestinationId(),
                 packets[0].getPayload());

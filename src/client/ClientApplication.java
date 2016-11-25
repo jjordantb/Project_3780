@@ -3,12 +3,14 @@ package client;
 import com.Message;
 import com.Messages;
 import com.Packet;
+import org.apache.commons.cli.*;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * Created by Jordan on 11/14/2016.
@@ -17,41 +19,76 @@ public class ClientApplication {
 
     public static void main(String[] args) {
 
-        final Message message = new Message(Message.Type.SEND, "0000000001", "0000000002",
-                "1111111112111111111211111111121111111112111111111211111111121111111112111111111211111111121111111112" +
-                        "1111111112111111111211111111121111111112111111111211111111121111111112111111111211111111121111111112" +
-                        "1111111112111111111211111111121111111112111111111211111111121111111112111111111211111111121111111112" +
-                        "1111111112111111111211111111121111111112111111111211111111121111111112111111111211111111121111111112" +
-                        "1111111112111111111211111111121111111112111111111211111111121111111112111111111211111111121111111112" +
-                        "1111111112111111111211111111121111111112111111111211111111121111111112111111111211111111121111111112" +
-                        "1111111112111111111211111111121111111112111111111211111111121111111112111111111211111111121111111112" +
-                        "1111111112111111111211111111121111111112111111111211111111121111111112111111111211111111121111111112" +
-                        "1111111112111111111211111111121111111112111111111211111111121111111112111111111211111111121111111112" +
-                        "1111111112111111111211111111121111111112111111111211111111121111111112111111111211111111121111111112" +
-                        "123oh;jdwj;awdoihawdpoawd");
-        System.out.println(message.toPackets().size());
+        Options options = new Options();
+        Option serverHost = new Option("s", "server-ip", true, "ip address of the server for this client");
+        serverHost.setRequired(true);
+        options.addOption(serverHost);
 
-        for (Packet packet : message.toPackets()) {
-            System.out.println(packet.toString());
+        CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+        CommandLine commandLine = null;
+        try {
+            commandLine = parser.parse(options, args);
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+            formatter.printHelp("utility-name", options);
+            System.exit(1);
         }
 
-        List<Packet> packets = message.toPackets();
-        System.out.println(Messages.decodeToMessage(packets.toArray(new Packet[packets.size()])));
+        if (commandLine != null) {
+            try {
+                final DatagramSocket socket = new DatagramSocket();
 
-//        try {
-//            DatagramSocket socket = new DatagramSocket();
-//            InetAddress address = InetAddress.getByName("localhost");
-//            while (true) {
-//                final List<byte[]> bytes = new Message(0, Message.Type.SEND, "0000000000", "0000000001", "This is the payload you slut muffin").encode();
-//                final DatagramPacket packet = new DatagramPacket(bytes.get(0), bytes.get(0).length, address, 6969);
-//                socket.send(packet);
-//                Thread.sleep(1000);
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+                final Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (true) {
+                            try {
+                                byte[] recData = new byte[1024];
+                                DatagramPacket recPacket = new DatagramPacket(recData, recData.length);
+                                socket.receive(recPacket);
+                                final Packet[] packets1 = new Packet[1];
+                                packets1[0] = Messages.decodeToPacket(recData);
+                                System.out.println(Messages.decodeToMessage(packets1).toString());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                });
+                thread.start();
+
+                while (true) {
+                    final Scanner scanner = new Scanner(System.in);
+                    System.out.println("Please enter your message.  To retrieve messages, type \'GET\'.");
+                    final String msg = scanner.nextLine();
+
+                    InetAddress address = InetAddress.getByName(commandLine.getOptionValue("server-ip"));
+
+                    if (!msg.equalsIgnoreCase("GET")) {
+                        System.out.println("SENDING MSG");
+                        final List<Packet> packets = new Message(Message.Type.SEND, "0000000002", "0000000001", msg).toPackets();
+                        for (Packet packet : packets) {
+                            final byte[] bytes = packet.encode();
+                            final DatagramPacket datagramPacket = new DatagramPacket(bytes, bytes.length, address, 6969);
+                            socket.send(datagramPacket);
+                        }
+                        System.out.println("SENT MSG");
+                    } else {
+                        System.out.println("SENDING [GET]");
+                        final List<Packet> packets = new Message(Message.Type.GET, "0000000002", null, null).toPackets();
+                        for (Packet packet : packets) {
+                            final byte[] bytes = packet.encode();
+                            final DatagramPacket datagramPacket = new DatagramPacket(bytes, bytes.length, address, 6969);
+                            socket.send(datagramPacket);
+                        }
+                        System.out.println("SENT [GET]");
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }

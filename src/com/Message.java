@@ -27,7 +27,7 @@ public class Message {
     public List<Packet> toPackets() {
         int cnt = 0;
         final List<Packet> packets = new ArrayList<>();
-        final byte[] payloadBytes = this.payload.getBytes();
+        final byte[] payloadBytes = this.payload != null ? this.payload.getBytes() : "null".getBytes(); // legit never seen "".getBytes() before lol
         byte[] bytes;
 
         int size = payloadBytes.length / PAYLOAD_LENGTH;
