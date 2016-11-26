@@ -10,7 +10,8 @@ public class ServerApplication {
     public static final int PORT = 6969; // Ayyyyy lmao
 
     public static void main(String[] args) throws IOException {
-        new Server(PORT).start();
+        final Server server = new Server(PORT);
+        server.start();
     }
 
 }
