@@ -1,7 +1,6 @@
 package client;
 
 import com.Message;
-import com.Packet;
 import server.ServerApplication;
 
 import java.io.IOException;
@@ -9,7 +8,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,25 +49,22 @@ public class Sender implements Runnable {
 
             final Matcher matcher = SEND_PATTERN.matcher(msg);
             if (matcher.find()) {
-                final List<Packet> packetList = new Message(Message.Type.SEND, this.userId, matcher.group(2), matcher.group(1)).toPackets();
-                this.sendPackets(address, packetList.toArray(new Packet[packetList.size()]));
+                this.sendPackets(address, new Message(0, Message.Type.SEND, this.userId, matcher.group(2), matcher.group(1))); // seq numb
             } else {
                 if (msg.equalsIgnoreCase("GET")) {
-                    this.sendPackets(address, new Packet(0, Message.Type.GET, this.userId, null, null));
+                    this.sendPackets(address, new Message(0, Message.Type.GET, this.userId, null, null)); // seq numb
                 }
             }
         }
     }
 
-    private void sendPackets(final InetAddress address, final Packet... packets) {
-        for (Packet packet : packets) {
-            final byte[] bytes = packet.encode();
-            final DatagramPacket datagramPacket = new DatagramPacket(bytes, bytes.length, address, ServerApplication.PORT);
-            try {
-                socket.send(datagramPacket);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    private void sendPackets(final InetAddress address, final Message message) {
+        final byte[] bytes = message.encode();
+        final DatagramPacket datagramPacket = new DatagramPacket(bytes, bytes.length, address, ServerApplication.PORT);
+        try {
+            socket.send(datagramPacket);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

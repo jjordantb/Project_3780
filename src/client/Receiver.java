@@ -1,8 +1,8 @@
 package client;
 
 import com.LogHandler;
+import com.Message;
 import com.Messages;
-import com.Packet;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -27,16 +27,14 @@ public class Receiver implements Runnable {
     @Override
     public void run() { // needs to handle ACK's
         while (this.running) {
-            byte[] recData = new byte[1024];
+            byte[] recData = new byte[Message.PAYLOAD_LENGTH + 22];
             DatagramPacket recPacket = new DatagramPacket(recData, recData.length);
             try {
                 socket.receive(recPacket);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            final Packet[] packets = new Packet[1];
-            packets[0] = Messages.decodeToPacket(recData);
-            LogHandler.log(Messages.decodeToMessage(packets).getPayload());
+            LogHandler.log(Messages.decodeToPacket(recData).toString());
         }
     }
 
